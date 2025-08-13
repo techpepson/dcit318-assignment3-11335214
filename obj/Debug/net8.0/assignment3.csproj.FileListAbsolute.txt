@@ -1,0 +1,14 @@
+T:\Academics\DCIT 318\assignments\assignment3\bin\Debug\net8.0\assignment3.exe
+T:\Academics\DCIT 318\assignments\assignment3\bin\Debug\net8.0\assignment3.deps.json
+T:\Academics\DCIT 318\assignments\assignment3\bin\Debug\net8.0\assignment3.runtimeconfig.json
+T:\Academics\DCIT 318\assignments\assignment3\bin\Debug\net8.0\assignment3.dll
+T:\Academics\DCIT 318\assignments\assignment3\bin\Debug\net8.0\assignment3.pdb
+T:\Academics\DCIT 318\assignments\assignment3\obj\Debug\net8.0\assignment3.GeneratedMSBuildEditorConfig.editorconfig
+T:\Academics\DCIT 318\assignments\assignment3\obj\Debug\net8.0\assignment3.AssemblyInfoInputs.cache
+T:\Academics\DCIT 318\assignments\assignment3\obj\Debug\net8.0\assignment3.AssemblyInfo.cs
+T:\Academics\DCIT 318\assignments\assignment3\obj\Debug\net8.0\assignment3.csproj.CoreCompileInputs.cache
+T:\Academics\DCIT 318\assignments\assignment3\obj\Debug\net8.0\assignment3.dll
+T:\Academics\DCIT 318\assignments\assignment3\obj\Debug\net8.0\refint\assignment3.dll
+T:\Academics\DCIT 318\assignments\assignment3\obj\Debug\net8.0\assignment3.pdb
+T:\Academics\DCIT 318\assignments\assignment3\obj\Debug\net8.0\assignment3.genruntimeconfig.cache
+T:\Academics\DCIT 318\assignments\assignment3\obj\Debug\net8.0\ref\assignment3.dll
