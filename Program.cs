@@ -1,4 +1,10 @@
-﻿// Transaction record
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text.Json;
+
+// Transaction record
 public record Transaction(int Id, DateTime Date, decimal Amount, string Category);
 
 // Transaction Processor Interface
@@ -622,8 +628,214 @@ public class StudentResultProcessor
     }
 }
 
-// Entry point
-class Program
+// ============================================
+// Inventory Management System
+// ============================================
+
+// Marker Interface
+public interface IInventoryEntity
+{
+    int Id { get; }
+}
+
+// Immutable Record
+public record InventoryItem(int Id, string Name, int Quantity, DateTime DateAdded) : IInventoryEntity;
+
+// Generic Inventory Logger
+public class InventoryLogger<T> where T : IInventoryEntity
+{
+    private readonly List<T> _log = new();
+    private readonly string _filePath;
+    private readonly JsonSerializerOptions _jsonOptions = new() 
+    { 
+        WriteIndented = true,
+        PropertyNameCaseInsensitive = true
+    };
+
+    public InventoryLogger(string filePath)
+    {
+        _filePath = filePath ?? throw new ArgumentNullException(nameof(filePath));
+    }
+
+    public void Add(T item)
+    {
+        if (item == null)
+            throw new ArgumentNullException(nameof(item));
+            
+        _log.Add(item);
+        Console.WriteLine($"Added item: {item}");
+    }
+
+    public IReadOnlyList<T> GetAll() => _log.AsReadOnly();
+
+    public void SaveToFile()
+    {
+        try
+        {
+            string json = JsonSerializer.Serialize(_log, _jsonOptions);
+            File.WriteAllText(_filePath, json);
+            Console.WriteLine($"Successfully saved {_log.Count} items to {_filePath}");
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException)
+        {
+            Console.WriteLine($"Error saving to file: {ex.Message}");
+            throw;
+        }
+    }
+
+    public void LoadFromFile()
+    {
+        try
+        {
+            if (!File.Exists(_filePath))
+            {
+                Console.WriteLine("No existing inventory file found. Starting with empty inventory.");
+                _log.Clear();
+                return;
+            }
+
+            string json = File.ReadAllText(_filePath);
+            var items = JsonSerializer.Deserialize<List<T>>(json, _jsonOptions);
+            
+            _log.Clear();
+            if (items != null)
+            {
+                _log.AddRange(items);
+            }
+            
+            Console.WriteLine($"Successfully loaded {_log.Count} items from {_filePath}");
+        }
+        catch (JsonException ex)
+        {
+            Console.WriteLine($"Error parsing inventory file: {ex.Message}");
+            throw;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException)
+        {
+            Console.WriteLine($"Error reading from file: {ex.Message}");
+            throw;
+        }
+    }
+}
+
+// Inventory Application
+public class InventoryApp
+{
+    private readonly InventoryLogger<InventoryItem> _logger;
+    private const string InventoryFile = "inventory.json";
+
+    public InventoryApp()
+    {
+        _logger = new InventoryLogger<InventoryItem>(InventoryFile);
+    }
+
+    public void SeedSampleData()
+    {
+        var items = new List<InventoryItem>
+        {
+            new(1, "Laptop", 10, DateTime.Now.AddDays(-30)),
+            new(2, "Smartphone", 25, DateTime.Now.AddDays(-15)),
+            new(3, "Headphones", 50, DateTime.Now.AddDays(-7)),
+            new(4, "Keyboard", 30, DateTime.Now.AddDays(-3)),
+            new(5, "Mouse", 40, DateTime.Now)
+        };
+
+        foreach (var item in items)
+        {
+            _logger.Add(item);
+        }
+        
+        Console.WriteLine("\n=== Sample data seeded successfully ===");
+    }
+
+    public void SaveData()
+    {
+        try
+        {
+            _logger.SaveToFile();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to save data: {ex.Message}");
+        }
+    }
+
+    public void LoadData()
+    {
+        try
+        {
+            _logger.LoadFromFile();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to load data: {ex.Message}");
+        }
+    }
+
+    public void PrintAllItems()
+    {
+        var items = _logger.GetAll();
+        
+        if (!items.Any())
+        {
+            Console.WriteLine("No items in inventory.");
+            return;
+        }
+
+        Console.WriteLine("\n=== Current Inventory ===");
+        Console.WriteLine($"{"ID",-5} | {"Name",-15} | {"Quantity",-8} | Date Added");
+        Console.WriteLine(new string('-', 60));
+        
+        foreach (var item in items.OrderBy(i => i.Id))
+        {
+            Console.WriteLine($"{item.Id,-5} | {item.Name,-15} | {item.Quantity,-8} | {item.DateAdded:yyyy-MM-dd}");
+        }
+        
+        Console.WriteLine($"\nTotal items: {items.Count}");
+        Console.WriteLine($"Total quantity: {items.Sum(i => i.Quantity)}");
+    }
+}
+
+// Update the Program class to include inventory system demo
+partial class Program
+{
+    static void RunInventoryDemo()
+    {
+        Console.WriteLine("\n" + new string('=', 50));
+        Console.WriteLine("INVENTORY MANAGEMENT SYSTEM");
+        Console.WriteLine(new string('=', 50));
+
+        try
+        {
+            // Create and initialize the app
+            var app = new InventoryApp();
+            
+            Console.WriteLine("\n=== Seeding sample data... ===");
+            app.SeedSampleData();
+            
+            Console.WriteLine("\n=== Saving data to file... ===");
+            app.SaveData();
+            
+            Console.WriteLine("\n=== Creating new instance to simulate new session... ===");
+            var newApp = new InventoryApp();
+            
+            Console.WriteLine("\n=== Loading data from file... ===");
+            newApp.LoadData();
+            
+            Console.WriteLine("\n=== Displaying loaded inventory... ===");
+            newApp.PrintAllItems();
+            
+            Console.WriteLine("\n=== Inventory demo completed successfully ===");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"An error occurred in the inventory demo: {ex.Message}");
+        }
+    }
+}
+
+// Update the Main method to include the inventory demo
+partial class Program
 {
     static void Main(string[] args)
     {
@@ -650,6 +862,8 @@ class Program
         RunWarehouseDemo();
 
         RunGradingSystem();
+        
+        RunInventoryDemo();
         
         // Keep the console window open
         Console.WriteLine("\nPress any key to exit...");
