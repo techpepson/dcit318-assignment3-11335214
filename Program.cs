@@ -734,13 +734,13 @@ class Program
             if (!File.Exists(inputFile))
             {
                 File.WriteAllText(inputFile, 
-                    "101, John Smith, 85\n" +
-                    "102, Sarah Johnson, 92\n" +
-                    "103, Michael Brown, 78\n" +
-                    "104, Emily Davis, 65\n" +
-                    "105, Robert Wilson, 55\n" +
-                    "106, Jennifer Lee, 42\n" +
-                    "107, David Miller, 95");
+                    "11335214, Dickson Daniel Peprah, 85\n" +
+                    "11335215, Jane Doe, 92\n" +
+                    "11335216, Michael Brown, 78\n" +
+                    "11335217, Emily Davis, 65\n" +
+                    "11335218, Robert Wilson, 55\n" +
+                    "11335219, Jennifer Lee, 42\n" +
+                    "11335220, David Miller, 95");
                 Console.WriteLine($"Created sample input file: {Path.GetFullPath(inputFile)}");
             }
 
