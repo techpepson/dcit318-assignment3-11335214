@@ -1,0 +1,22 @@
+STUDENT GRADE REPORT
+===================
+
+David Miller (ID: 107): Score = 95, Grade = A
+John Smith (ID: 101): Score = 85, Grade = A
+Sarah Johnson (ID: 102): Score = 92, Grade = A
+Michael Brown (ID: 103): Score = 78, Grade = B
+Emily Davis (ID: 104): Score = 65, Grade = C
+Robert Wilson (ID: 105): Score = 55, Grade = D
+Jennifer Lee (ID: 106): Score = 42, Grade = F
+
+SUMMARY
+=======
+Total Students: 7
+Highest Score: 95
+Lowest Score: 42
+Average Score: 73.14
+Grade A: 3 students
+Grade B: 1 students
+Grade C: 1 students
+Grade D: 1 students
+Grade F: 1 students

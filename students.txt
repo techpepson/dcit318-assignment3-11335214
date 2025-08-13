@@ -1,0 +1,7 @@
+101, John Smith, 85
+102, Sarah Johnson, 92
+103, Michael Brown, 78
+104, Emily Davis, 65
+105, Robert Wilson, 55
+106, Jennifer Lee, 42
+107, David Miller, 95

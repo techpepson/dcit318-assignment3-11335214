@@ -471,6 +471,157 @@ public class WareHouseManager
     public InventoryRepository<GroceryItem> Groceries => _groceries;
 }
 
+// ============================================
+// Student Grading System
+// ============================================
+
+// Custom Exceptions
+public class InvalidScoreFormatException : Exception
+{
+    public InvalidScoreFormatException(string message) : base(message) { }
+}
+
+public class MissingFieldException : Exception
+{
+    public MissingFieldException(string message) : base(message) { }
+}
+
+// Student Class
+public class Student
+{
+    public int Id { get; }
+    public string FullName { get; }
+    public int Score { get; }
+
+    public Student(int id, string fullName, int score)
+    {
+        Id = id;
+        FullName = fullName ?? throw new ArgumentNullException(nameof(fullName));
+        Score = score >= 0 && score <= 100 
+            ? score 
+            : throw new ArgumentOutOfRangeException(nameof(score), "Score must be between 0 and 100");
+    }
+
+    public string GetGrade()
+    {
+        return Score switch
+        {
+            >= 80 and <= 100 => "A",
+            >= 70 and < 80 => "B",
+            >= 60 and < 70 => "C",
+            >= 50 and < 60 => "D",
+            _ => "F"
+        };
+    }
+
+    public override string ToString()
+    {
+        return $"{FullName} (ID: {Id}): Score = {Score}, Grade = {GetGrade()}";
+    }
+}
+
+// Student Result Processor
+public class StudentResultProcessor
+{
+    public List<Student> ReadStudentsFromFile(string inputFilePath)
+    {
+        var students = new List<Student>();
+
+        using var reader = new StreamReader(inputFilePath);
+        int lineNumber = 0;
+
+        while (!reader.EndOfStream)
+        {
+            lineNumber++;
+            string? line = reader.ReadLine();
+            if (string.IsNullOrWhiteSpace(line)) continue;
+
+            try
+            {
+                string[] fields = line.Split(',');
+                
+                // Validate number of fields
+                if (fields.Length != 3)
+                {
+                    throw new MissingFieldException(
+                        $"Line {lineNumber}: Expected 3 fields but found {fields.Length}. Line: '{line}'");
+                }
+
+                // Parse ID
+                if (!int.TryParse(fields[0].Trim(), out int id))
+                {
+                    throw new MissingFieldException(
+                        $"Line {lineNumber}: Invalid student ID format. Line: '{line}'");
+                }
+
+                string fullName = fields[1].Trim();
+                if (string.IsNullOrEmpty(fullName))
+                {
+                    throw new MissingFieldException(
+                        $"Line {lineNumber}: Student name cannot be empty. Line: '{line}'");
+                }
+
+                // Parse score
+                if (!int.TryParse(fields[2].Trim(), out int score) || score < 0 || score > 100)
+                {
+                    throw new InvalidScoreFormatException(
+                        $"Line {lineNumber}: Score must be an integer between 0 and 100. Line: '{line}'");
+                }
+
+                students.Add(new Student(id, fullName, score));
+            }
+            catch (Exception ex) when (ex is not (MissingFieldException or InvalidScoreFormatException))
+            {
+                throw new Exception($"Error processing line {lineNumber}: {ex.Message}", ex);
+            }
+        }
+
+        return students;
+    }
+
+    public void WriteReportToFile(List<Student> students, string outputFilePath)
+    {
+        using var writer = new StreamWriter(outputFilePath);
+        
+        writer.WriteLine("STUDENT GRADE REPORT");
+        writer.WriteLine("===================\n");
+        
+        if (students.Count == 0)
+        {
+            writer.WriteLine("No student records found.");
+            return;
+        }
+
+        // Sort students by grade then by name
+        var sortedStudents = students
+            .OrderBy(s => s.GetGrade())
+            .ThenBy(s => s.FullName)
+            .ToList();
+
+        foreach (var student in sortedStudents)
+        {
+            writer.WriteLine(student);
+        }
+
+        // Add summary
+        writer.WriteLine("\nSUMMARY");
+        writer.WriteLine("=======");
+        writer.WriteLine($"Total Students: {students.Count}");
+        writer.WriteLine($"Highest Score: {students.Max(s => s.Score)}");
+        writer.WriteLine($"Lowest Score: {students.Min(s => s.Score)}");
+        writer.WriteLine($"Average Score: {students.Average(s => s.Score):F2}");
+        
+        // Count by grade
+        var grades = students.GroupBy(s => s.GetGrade())
+            .OrderBy(g => g.Key);
+            
+        foreach (var gradeGroup in grades)
+        {
+            writer.WriteLine($"Grade {gradeGroup.Key}: {gradeGroup.Count()} students");
+        }
+    }
+}
+
 // Entry point
 class Program
 {
@@ -486,25 +637,19 @@ class Program
         
         // Run Healthcare Application
         var healthApp = new HealthSystemApp();
-        
-        // Seed data
         healthApp.SeedData();
-        
-        // Build prescription map
         healthApp.BuildPrescriptionMap();
-        
-        // Display all patients
         healthApp.PrintAllPatients();
-        
-        // Display prescriptions for a specific patient (using first patient's ID)
         healthApp.PrintPrescriptionsForPatient(1);
-        
+
         Console.WriteLine("\n" + new string('=', 50));
         Console.WriteLine("WAREHOUSE INVENTORY SYSTEM");
         Console.WriteLine(new string('=', 50));
         
         // Run Warehouse Application
         RunWarehouseDemo();
+
+        RunGradingSystem();
         
         // Keep the console window open
         Console.WriteLine("\nPress any key to exit...");
@@ -566,6 +711,73 @@ class Program
             Console.WriteLine("\n=== Final Inventory State ===");
             warehouse.PrintAllItems(warehouse.Groceries);
             warehouse.PrintAllItems(warehouse.Electronics);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"An unexpected error occurred: {ex.Message}");
+        }
+    }
+
+    static void RunGradingSystem()
+    {
+        Console.WriteLine("\n" + new string('=', 50));
+        Console.WriteLine("STUDENT GRADING SYSTEM");
+        Console.WriteLine(new string('=', 50));
+
+        var processor = new StudentResultProcessor();
+        string inputFile = "students.txt";
+        string outputFile = "grade_report.txt";
+
+        try
+        {
+            // Create sample input file if it doesn't exist
+            if (!File.Exists(inputFile))
+            {
+                File.WriteAllText(inputFile, 
+                    "101, John Smith, 85\n" +
+                    "102, Sarah Johnson, 92\n" +
+                    "103, Michael Brown, 78\n" +
+                    "104, Emily Davis, 65\n" +
+                    "105, Robert Wilson, 55\n" +
+                    "106, Jennifer Lee, 42\n" +
+                    "107, David Miller, 95");
+                Console.WriteLine($"Created sample input file: {Path.GetFullPath(inputFile)}");
+            }
+
+            Console.WriteLine($"Reading student data from: {Path.GetFullPath(inputFile)}");
+            var students = processor.ReadStudentsFromFile(inputFile);
+            
+            Console.WriteLine($"Writing grade report to: {Path.GetFullPath(outputFile)}");
+            processor.WriteReportToFile(students, outputFile);
+            
+            Console.WriteLine("\nGrade report generated successfully!");
+            Console.WriteLine("\nReport Summary:");
+            Console.WriteLine($"- Processed {students.Count} student records");
+            Console.WriteLine($"- Highest score: {students.Max(s => s.Score)}");
+            Console.WriteLine($"- Average score: {students.Average(s => s.Score):F1}");
+            
+            // Display grade distribution
+            var gradeGroups = students
+                .GroupBy(s => s.GetGrade())
+                .OrderBy(g => g.Key);
+                
+            Console.WriteLine("\nGrade Distribution:");
+            foreach (var group in gradeGroups)
+            {
+                Console.WriteLine($"- Grade {group.Key}: {group.Count()} students");
+            }
+        }
+        catch (FileNotFoundException ex)
+        {
+            Console.WriteLine($"Error: The file {ex.FileName} could not be found.");
+        }
+        catch (InvalidScoreFormatException ex)
+        {
+            Console.WriteLine($"Error: Invalid score format - {ex.Message}");
+        }
+        catch (MissingFieldException ex)
+        {
+            Console.WriteLine($"Error: Missing or invalid field - {ex.Message}");
         }
         catch (Exception ex)
         {
